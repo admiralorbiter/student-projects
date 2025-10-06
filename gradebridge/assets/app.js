@@ -45,16 +45,14 @@
     const offcanvas = offcanvasEl ? new bootstrap.Offcanvas(offcanvasEl) : null;
     const btnSearch = document.getElementById('btnSearchIcon');
     const btnSearchGo = document.getElementById('offcanvasSearchGo');
-    const input1 = document.getElementById('globalSearchInput');
     const input2 = document.getElementById('offcanvasSearchInput');
-    const btnTopGo = document.getElementById('btnSearch');
 
     const runSearch = async (q) => {
       if (!q || q.trim().length < 2) return;
       const pages = [
         {url:'index.html', title:'Home'},
         {url:'sprints.html', title:'Sprints'},
-        {url:'tasks.html', title:'Kanban'},
+        {url:'tasks.html', title:'Tasks'},
         {url:'api.html', title:'API Contract'},
         {url:'data-model.html', title:'Data Model'},
         {url:'ui.html', title:'UI Guide'},
@@ -64,7 +62,6 @@
         {url:'risks.html', title:'Risks'},
         {url:'roadmap.html', title:'Roadmap'},
         {url:'changelog.html', title:'Changelog'},
-        {url:'settings.html', title:'Settings'},
       ];
       const results = [];
       for (const p of pages) {
@@ -101,9 +98,7 @@
     };
 
     if (btnSearch) btnSearch.addEventListener('click', ()=> { if (offcanvas) offcanvas.show(); setTimeout(()=>input2?.focus(), 300); });
-    if (btnTopGo && input1) btnTopGo.addEventListener('click', ()=> runSearch(input1.value));
     if (btnSearchGo && input2) btnSearchGo.addEventListener('click', ()=> runSearch(input2.value));
-    input1?.addEventListener('keydown', (e)=> { if (e.key === 'Enter') runSearch(input1.value); });
     input2?.addEventListener('keydown', (e)=> { if (e.key === 'Enter') runSearch(input2.value); });
   }
 
@@ -111,29 +106,6 @@
   document.addEventListener('DOMContentLoaded', ()=>{
     injectPartial('headerMount', 'partials/header.html');
     injectPartial('footerMount', 'partials/footer.html');
-    // Populate quick stats if present
-    if (document.getElementById('quickStats')) {
-      fetch('data/tasks.json').then(r=>r.json()).then(data=>{
-        const local = JSON.parse(localStorage.getItem('gb.taskState') || '{}');
-        const merged = data.tasks.map(t=>{
-          const s = local[t.id];
-          if (s) t = {...t, ...s};
-          return t;
-        });
-        const total = merged.length;
-        const done = merged.filter(t=>t.status==='Done').length;
-        const inprog = merged.filter(t=>t.status==='In Progress').length;
-        const review = merged.filter(t=>t.status==='Review').length;
-        const backlog = merged.filter(t=>t.status==='Backlog').length;
-        const pct = total ? Math.round(100 * done / total) : 0;
-        document.getElementById('statTotal').textContent = String(total);
-        document.getElementById('statDone').textContent = String(done);
-        document.getElementById('statInProgress').textContent = String(inprog);
-        document.getElementById('statBacklog').textContent = String(backlog);
-        const bar = document.getElementById('overallProgress');
-        if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', pct); bar.textContent = pct + '%'; }
-      }).catch(()=>{});
-    }
   });
 
   // Utility: copy text
