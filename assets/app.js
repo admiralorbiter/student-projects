@@ -50,18 +50,16 @@
     const runSearch = async (q) => {
       if (!q || q.trim().length < 2) return;
       const pages = [
-        {url:'index.html', title:'Home'},
-        {url:'sprints.html', title:'Sprints'},
-        {url:'tasks.html', title:'Tasks'},
-        {url:'api.html', title:'API Contract'},
-        {url:'data-model.html', title:'Data Model'},
-        {url:'ui.html', title:'UI Guide'},
-        {url:'security.html', title:'Security'},
-        {url:'testing.html', title:'Testing'},
-        {url:'decisions.html', title:'ADRs'},
-        {url:'risks.html', title:'Risks'},
-        {url:'roadmap.html', title:'Roadmap'},
-        {url:'changelog.html', title:'Changelog'},
+        {url:'index.html', title:'Overview'},
+        {url:'sprints.html', title:'Sprint Planning'},
+        {url:'tasks.html', title:'Task Breakdown'},
+        {url:'api.html', title:'API Implementation'},
+        {url:'data-model.html', title:'Database Design'},
+        {url:'ui.html', title:'Frontend Development'},
+        {url:'security.html', title:'Security Guidelines'},
+        {url:'testing.html', title:'Testing Strategy'},
+        {url:'decisions.html', title:'Architecture Decisions'},
+        {url:'roadmap.html', title:'Product Evolution'},
       ];
       const results = [];
       for (const p of pages) {
