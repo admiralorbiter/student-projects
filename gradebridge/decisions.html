@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GradeBridge Project Hub</title>
+    <link rel="icon" href="data:,">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+
+  </head>
+  <body data-page="decisions">
+    <div id="headerMount"></div>
+    <main class="container my-4">
+
+<h1 class="h3 mb-3">Architecture Decision Records (ADRs)</h1>
+<p>Key technology and design choices with rationale.</p>
+<div id="adrsList"></div>
+
+<div class="card mt-3">
+  <div class="card-header">Propose a new ADR (saved locally)</div>
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-3"><input id="adrId" class="form-control" placeholder="ADR-005"></div>
+      <div class="col-md-9"><input id="adrTitle" class="form-control" placeholder="Title"></div>
+      <div class="col-12"><input id="adrStatus" class="form-control" placeholder="Status (Proposed/Accepted/Rejected)"></div>
+      <div class="col-12"><textarea id="adrContext" class="form-control" rows="2" placeholder="Context"></textarea></div>
+      <div class="col-12"><textarea id="adrDecision" class="form-control" rows="2" placeholder="Decision"></textarea></div>
+      <div class="col-12"><textarea id="adrConsequences" class="form-control" rows="2" placeholder="Consequences"></textarea></div>
+      <div class="col-12 text-end"><button id="adrSave" class="btn btn-primary">Save (local)</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function renderADRs(list){
+  const container = document.getElementById('adrsList');
+  container.innerHTML = '';
+  list.forEach(a=>{
+    const card = document.createElement('div');
+    card.className='card mb-2';
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div class="fw-semibold">${a.id}: ${a.title}</div>
+          <span class="badge text-bg-light border">${a.status}</span>
+        </div>
+        <div class="small text-muted">Context</div>
+        <p>${a.context||''}</p>
+        <div class="small text-muted">Decision</div>
+        <p>${a.decision||''}</p>
+        <div class="small text-muted">Consequences</div>
+        <p class="mb-0">${a.consequences||''}</p>
+      </div>
+    `;
+    container.append(card);
+  });
+}
+(async ()=>{
+  const base = await fetch('data/adrs.json').then(r=>r.json());
+  const local = JSON.parse(localStorage.getItem('gb.adrs')||'[]');
+  const merged = [...base.adrs, ...local];
+  renderADRs(merged);
+
+  document.getElementById('adrSave').addEventListener('click', ()=>{
+    const a = {
+      id: document.getElementById('adrId').value.trim() || 'ADR-' + Math.floor(Math.random()*1000),
+      title: document.getElementById('adrTitle').value.trim(),
+      status: document.getElementById('adrStatus').value.trim() || 'Proposed',
+      context: document.getElementById('adrContext').value.trim(),
+      decision: document.getElementById('adrDecision').value.trim(),
+      consequences: document.getElementById('adrConsequences').value.trim()
+    };
+    const list = JSON.parse(localStorage.getItem('gb.adrs')||'[]'); list.push(a);
+    localStorage.setItem('gb.adrs', JSON.stringify(list));
+    alert('ADR saved locally.');
+    renderADRs([...base.adrs, ...list]);
+  });
+})();
+</script>
+
+    </main>
+    <div id="footerMount"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/app.js"></script>
+
+
+  </body>
+</html>

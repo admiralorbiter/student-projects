@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GradeBridge Project Hub</title>
+    <link rel="icon" href="data:,">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+
+  </head>
+  <body data-page="settings">
+    <div id="headerMount"></div>
+    <main class="container my-4">
+
+<h1 class="h3 mb-3">Settings</h1>
+<p class="text-muted">Configure sprint schedule and team names. Saved locally in your browser.</p>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Sprints</div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label">Project Start Date</label>
+          <input type="date" id="setStart" class="form-control">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Sprint Length (weeks)</label>
+          <input type="number" id="setLen" class="form-control" min="1" max="6">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Number of Sprints</label>
+          <input type="number" id="setNum" class="form-control" min="1" max="12">
+        </div>
+        <button class="btn btn-primary" id="btnSaveSprints">Save (local)</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Team</div>
+      <div class="card-body">
+        <div id="teamList" class="row g-2"></div>
+        <button class="btn btn-outline-primary mt-2" id="btnAddMember">Add Member</button>
+        <button class="btn btn-primary mt-2 float-end" id="btnSaveTeam">Save Team (local)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(async ()=>{
+  const defaults = await fetch('data/settings.json').then(r=>r.json());
+  const local = JSON.parse(localStorage.getItem('gb.settings')||'{}');
+  const s = {...defaults, ...local};
+
+  const $ = (id)=>document.getElementById(id);
+  $('#setStart').value = s.projectStart;
+  $('#setLen').value = s.sprintWeeks;
+  $('#setNum').value = s.numSprints;
+
+  function renderTeam(list){
+    const wrap = document.getElementById('teamList');
+    wrap.innerHTML = '';
+    list.forEach((m, idx)=>{
+      const row = document.createElement('div'); row.className='col-12';
+      row.innerHTML = `
+        <div class="input-group">
+          <span class="input-group-text">Role</span>
+          <input class="form-control" value="${m.role||''}" data-idx="${idx}" data-key="role">
+          <span class="input-group-text">Name</span>
+          <input class="form-control" value="${m.name||''}" data-idx="${idx}" data-key="name">
+          <button class="btn btn-outline-danger" data-del="${idx}">Remove</button>
+        </div>
+      `;
+      wrap.append(row);
+    });
+    wrap.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i = Number(btn.getAttribute('data-del'));
+        s.team.splice(i,1); renderTeam(s.team);
+      });
+    });
+    wrap.querySelectorAll('input[data-key]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const idx = Number(inp.getAttribute('data-idx'));
+        const key = inp.getAttribute('data-key');
+        s.team[idx][key] = inp.value;
+      });
+    });
+  }
+  renderTeam(s.team);
+
+  document.getElementById('btnAddMember').addEventListener('click', ()=>{
+    s.team.push({name:'', role:''}); renderTeam(s.team);
+  });
+
+  document.getElementById('btnSaveSprints').addEventListener('click', ()=>{
+    s.projectStart = $('#setStart').value;
+    s.sprintWeeks = Number($('#setLen').value);
+    s.numSprints = Number($('#setNum').value);
+    localStorage.setItem('gb.settings', JSON.stringify(s));
+    alert('Sprint settings saved locally. Sprints page will use these.');
+  });
+
+  document.getElementById('btnSaveTeam').addEventListener('click', ()=>{
+    localStorage.setItem('gb.settings', JSON.stringify(s));
+    alert('Team saved locally.');
+  });
+})();
+</script>
+
+    </main>
+    <div id="footerMount"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/app.js"></script>
+
+
+  </body>
+</html>

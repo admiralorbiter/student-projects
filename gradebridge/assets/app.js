@@ -1,0 +1,149 @@
+
+/* Global JS for GradeBridge Project Hub */
+(function(){
+  const injectPartial = async (id, url) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      container.innerHTML = html;
+      if (id === 'headerMount') afterHeaderInject();
+    } catch (e) { console.error('Failed to load partial', url, e); }
+  };
+
+  // Theme
+  const THEME_KEY = 'gb.theme';
+  function applyTheme(theme){
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-bs-theme','dark');
+    } else {
+      document.documentElement.removeAttribute('data-bs-theme');
+    }
+  }
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  applyTheme(savedTheme);
+
+  // After header inject: wire up search & theme toggle
+  function afterHeaderInject(){
+    // Active nav highlighting
+    const page = document.body.dataset.page || '';
+    document.querySelectorAll('#siteNavbar a.nav-link').forEach(a=>{
+      const key = a.getAttribute('data-nav');
+      if (key && page.startsWith(key)) a.classList.add('active');
+    });
+
+    const btnToggle = document.getElementById('themeToggle');
+    if (btnToggle) btnToggle.addEventListener('click', ()=>{
+      const next = (localStorage.getItem(THEME_KEY) || 'light') === 'light' ? 'dark' : 'light';
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+
+    // Search offcanvas
+    const offcanvasEl = document.getElementById('offcanvasSearch');
+    const offcanvas = offcanvasEl ? new bootstrap.Offcanvas(offcanvasEl) : null;
+    const btnSearch = document.getElementById('btnSearchIcon');
+    const btnSearchGo = document.getElementById('offcanvasSearchGo');
+    const input1 = document.getElementById('globalSearchInput');
+    const input2 = document.getElementById('offcanvasSearchInput');
+    const btnTopGo = document.getElementById('btnSearch');
+
+    const runSearch = async (q) => {
+      if (!q || q.trim().length < 2) return;
+      const pages = [
+        {url:'index.html', title:'Home'},
+        {url:'sprints.html', title:'Sprints'},
+        {url:'tasks.html', title:'Kanban'},
+        {url:'api.html', title:'API Contract'},
+        {url:'data-model.html', title:'Data Model'},
+        {url:'ui.html', title:'UI Guide'},
+        {url:'security.html', title:'Security'},
+        {url:'testing.html', title:'Testing'},
+        {url:'decisions.html', title:'ADRs'},
+        {url:'risks.html', title:'Risks'},
+        {url:'roadmap.html', title:'Roadmap'},
+        {url:'changelog.html', title:'Changelog'},
+        {url:'settings.html', title:'Settings'},
+      ];
+      const results = [];
+      for (const p of pages) {
+        try {
+          const res = await fetch(p.url);
+          const txt = await res.text();
+          // Grab main content only if possible
+          const m = txt.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+          const content = (m ? m[1] : txt).replace(/<[^>]+>/g,' ');
+          const idx = content.toLowerCase().indexOf(q.toLowerCase());
+          if (idx !== -1) {
+            const start = Math.max(0, idx-60);
+            const end = Math.min(content.length, idx+120);
+            const snippet = content.substring(start, end).replace(/\s+/g,' ').trim();
+            results.push({title:p.title, url:p.url, snippet});
+          }
+        } catch (e) { /* ignore */ }
+      }
+      const list = document.getElementById('searchResults');
+      if (list) {
+        list.innerHTML = '';
+        if (!results.length) {
+          list.innerHTML = '<div class="text-muted">No results.</div>';
+        } else {
+          results.forEach(r=>{
+            const a = document.createElement('a');
+            a.href = r.url + '#search';
+            a.className = 'list-group-item list-group-item-action';
+            a.innerHTML = `<div class="fw-semibold">${r.title}</div><div class="small text-muted">${r.snippet}…</div>`;
+            list.appendChild(a);
+          });
+        }
+      }
+    };
+
+    if (btnSearch) btnSearch.addEventListener('click', ()=> { if (offcanvas) offcanvas.show(); setTimeout(()=>input2?.focus(), 300); });
+    if (btnTopGo && input1) btnTopGo.addEventListener('click', ()=> runSearch(input1.value));
+    if (btnSearchGo && input2) btnSearchGo.addEventListener('click', ()=> runSearch(input2.value));
+    input1?.addEventListener('keydown', (e)=> { if (e.key === 'Enter') runSearch(input1.value); });
+    input2?.addEventListener('keydown', (e)=> { if (e.key === 'Enter') runSearch(input2.value); });
+  }
+
+  // Inject header and footer into mounts
+  document.addEventListener('DOMContentLoaded', ()=>{
+    injectPartial('headerMount', 'partials/header.html');
+    injectPartial('footerMount', 'partials/footer.html');
+    // Populate quick stats if present
+    if (document.getElementById('quickStats')) {
+      fetch('data/tasks.json').then(r=>r.json()).then(data=>{
+        const local = JSON.parse(localStorage.getItem('gb.taskState') || '{}');
+        const merged = data.tasks.map(t=>{
+          const s = local[t.id];
+          if (s) t = {...t, ...s};
+          return t;
+        });
+        const total = merged.length;
+        const done = merged.filter(t=>t.status==='Done').length;
+        const inprog = merged.filter(t=>t.status==='In Progress').length;
+        const review = merged.filter(t=>t.status==='Review').length;
+        const backlog = merged.filter(t=>t.status==='Backlog').length;
+        const pct = total ? Math.round(100 * done / total) : 0;
+        document.getElementById('statTotal').textContent = String(total);
+        document.getElementById('statDone').textContent = String(done);
+        document.getElementById('statInProgress').textContent = String(inprog);
+        document.getElementById('statBacklog').textContent = String(backlog);
+        const bar = document.getElementById('overallProgress');
+        if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', pct); bar.textContent = pct + '%'; }
+      }).catch(()=>{});
+    }
+  });
+
+  // Utility: copy text
+  window.copyText = async function copyText(txt){
+    try {
+      await navigator.clipboard.writeText(txt);
+      alert('Copied to clipboard!');
+    } catch (e) {
+      console.log('Clipboard failed', e);
+    }
+  };
+
+})();

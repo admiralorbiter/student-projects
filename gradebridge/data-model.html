@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GradeBridge Project Hub</title>
+    <link rel="icon" href="data:,">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+
+  </head>
+  <body data-page="data-model">
+    <div id="headerMount"></div>
+    <main class="container my-4">
+
+<h1 class="h3 mb-3">Data Model</h1>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Entity-Relationship Overview</div>
+      <div class="card-body">
+        <svg viewBox="0 0 740 520" width="100%" height="auto" role="img" aria-label="ERD">
+          <defs>
+            <style>
+              .tbl { fill: #f8f9fa; stroke: #6c757d; }
+              .title { font-weight: 700; }
+              .col { font-size: 12px; }
+              .line { stroke: #6c757d; stroke-width: 1.5; marker-end: url(#arrow); }
+            </style>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#6c757d"></path>
+            </marker>
+          </defs>
+
+          <!-- Tables -->
+          <g transform="translate(20,20)">
+            <rect class="tbl" width="200" height="100" rx="8"></rect>
+            <text x="10" y="20" class="title">users</text>
+            <text x="10" y="40" class="col">id PK • program_id FK</text>
+            <text x="10" y="58" class="col">school_id FK • role</text>
+            <text x="10" y="76" class="col">email • password_hash</text>
+          </g>
+
+          <g transform="translate(260,20)">
+            <rect class="tbl" width="200" height="80" rx="8"></rect>
+            <text x="10" y="20" class="title">schools</text>
+            <text x="10" y="40" class="col">id PK • name</text>
+            <text x="10" y="58" class="col">created_at</text>
+          </g>
+
+          <g transform="translate(500,20)">
+            <rect class="tbl" width="200" height="80" rx="8"></rect>
+            <text x="10" y="20" class="title">programs</text>
+            <text x="10" y="40" class="col">id PK • name</text>
+            <text x="10" y="58" class="col">created_at</text>
+          </g>
+
+          <g transform="translate(20,180)">
+            <rect class="tbl" width="220" height="100" rx="8"></rect>
+            <text x="10" y="20" class="title">courses</text>
+            <text x="10" y="40" class="col">id PK • program_id</text>
+            <text x="10" y="58" class="col">school_id • teacher_id FK users</text>
+            <text x="10" y="76" class="col">name • term</text>
+          </g>
+
+          <g transform="translate(300,180)">
+            <rect class="tbl" width="200" height="100" rx="8"></rect>
+            <text x="10" y="20" class="title">enrollments</text>
+            <text x="10" y="40" class="col">id PK • course_id FK</text>
+            <text x="10" y="58" class="col">student_id FK users</text>
+            <text x="10" y="76" class="col">UNIQUE(course,student)</text>
+          </g>
+
+          <g transform="translate(20,340)">
+            <rect class="tbl" width="220" height="100" rx="8"></rect>
+            <text x="10" y="20" class="title">assignments</text>
+            <text x="10" y="40" class="col">id PK • course_id FK</text>
+            <text x="10" y="58" class="col">title • max_points • due_date</text>
+            <text x="10" y="76" class="col">resource_url</text>
+          </g>
+
+          <g transform="translate(300,340)">
+            <rect class="tbl" width="200" height="100" rx="8"></rect>
+            <text x="10" y="20" class="title">grades</text>
+            <text x="10" y="40" class="col">id PK • assignment_id FK</text>
+            <text x="10" y="58" class="col">student_id FK users</text>
+            <text x="10" y="76" class="col">points_earned • feedback</text>
+          </g>
+
+          <!-- Relationships -->
+          <line class="line" x1="120" y1="120" x2="130" y2="180"></line>
+          <line class="line" x1="220" y1="230" x2="300" y2="230"></line>
+          <line class="line" x1="120" y1="280" x2="130" y2="340"></line>
+          <line class="line" x1="220" y1="390" x2="300" y2="390"></line>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Schema (summary)</div>
+      <div class="card-body">
+        <pre class="bg-body-tertiary p-2 rounded"><code id="schemaText">Loading…</code></pre>
+        <div class="text-end">
+          <button class="btn btn-sm btn-outline-secondary" onclick="copyText(document.getElementById('schemaText').textContent)">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+fetch('data/schema.json').then(r=>r.json()).then(s=>{
+  const txt = [
+    ...s.tables.map(t=> t.name + ": " + t.columns.join(", ")),
+    "",
+    "Grade rule: " + s.gradeRule
+  ].join("\n");
+  document.getElementById('schemaText').textContent = txt;
+});
+</script>
+
+    </main>
+    <div id="footerMount"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/app.js"></script>
+
+
+  </body>
+</html>
